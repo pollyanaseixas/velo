@@ -27,6 +27,22 @@ function generateOrderNumber(): string {
   return result;
 }
 
+type OrderStatus = 'APROVADO' | 'REPROVADO' | 'EM_ANALISE';
+
+function normalizeOrderStatus(status: string): OrderStatus {
+  const normalized = status
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, '_')
+    .toUpperCase();
+
+  if (normalized === 'APROVADO' || normalized === 'REPROVADO' || normalized === 'EM_ANALISE') {
+    return normalized;
+  }
+
+  return 'REPROVADO';
+}
+
 function dbOrderToOrder(dbOrder: DbOrder): Order {
   const nameParts = dbOrder.customer_name.split(' ');
   const firstName = nameParts[0] || '';
@@ -50,7 +66,7 @@ function dbOrderToOrder(dbOrder: DbOrder): Order {
       store: '',
     },
     paymentMethod: dbOrder.payment_method as 'avista' | 'financiamento',
-    status: dbOrder.status as 'APROVADO' | 'REPROVADO' | 'EM_ANALISE',
+    status: normalizeOrderStatus(dbOrder.status),
     createdAt: dbOrder.created_at,
   };
 }
